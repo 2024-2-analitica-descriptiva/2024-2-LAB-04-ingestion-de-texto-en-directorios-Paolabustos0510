@@ -71,3 +71,68 @@ def pregunta_01():
 
 
     """
+    import os
+    import shutil
+    import pandas as pd
+    import zipfile
+
+
+    # Ruta del archivo .zip
+    zip_path = "files/input.zip"
+
+    # Ruta de extracción
+    extract_dir = "files/input"
+
+    def create_folder(path):
+    # Verificar si la carpeta ya existe y eliminarla
+        if os.path.exists(path):
+            shutil.rmtree(path)  # Eliminar la carpeta existente
+
+        # Verificar si existe la carpeta 'input'
+        if not os.path.exists(path):
+            os.makedirs(path)
+
+
+    create_folder(extract_dir)
+
+    with zipfile.ZipFile(zip_path , "r") as zip_ref:
+        # Extract all the contents to the specified directory
+        zip_ref.extractall(zip_path .split("/")[0])
+        
+    output_dir = "files/output"
+    create_folder(output_dir)
+
+
+    for i in os.listdir(extract_dir):
+        type_folder = os.path.join(extract_dir, i)
+        name = f"{i}_dataset.csv"
+        all_data = []  
+
+        for j in os.listdir(type_folder):
+            sentiment = j
+            sentiment_folder = os.path.join(type_folder, j)
+
+            for k in os.listdir(sentiment_folder):
+                file_path = os.path.join(sentiment_folder, k)
+                
+                # Leer el archivo usando Pandas
+                try:
+                    df = pd.read_csv(file_path, header=None, names=["phrase"], encoding="utf-8")
+                    df["target"] = sentiment  
+                    all_data.append(df)  
+                except Exception as e:
+                    print(f"Error procesando el archivo {file_path}: {e}")
+            
+        # Verificar si el archivo de salida ya existe y eliminarlo si es necesario
+        output_file = os.path.join(output_dir, f"{i}_dataset.csv")
+        if os.path.exists(output_file):
+            os.remove(output_file)  
+
+        if all_data:
+            final_df = pd.concat(all_data, ignore_index=True)
+            output_file = os.path.join(output_dir, name)
+            final_df.to_csv(output_file, index=False, encoding="utf-8")
+            print(f"Archivo guardado: {output_file}")
+
+if __name__ == "__main__":
+    print(pregunta_01())
